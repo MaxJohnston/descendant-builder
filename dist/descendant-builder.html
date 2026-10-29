@@ -2365,8 +2365,8 @@ var ICON_RING='<svg viewBox="0 0 16 16" width="13" height="13" fill="none" strok
 
 /* FOCUS: while showing how one person descends from the start of the tree, {id, set (the people on those lines), paths, prev} */
 var FOCUS=null;
-/* In edit mode, "Add" cards are drawn only on smaller charts; on big ones they would more than double the cards, so adding is done from a card's details instead. */
-var ADDCARDS=true, ADDMAX=1500;
+/* Big charts draw only the cards and lines near the visible area (see paint), so "Add" cards can be shown at any size. */
+var VIRT=2500, LINES=[], PAINTED=null, HLKEY=null;
 var VIEWDESC=new Set(), NODES=[], BYKEY=new Map(), WIDTH=0, HEIGHT=0, MAXCOL=0, SHOWN=new Map();
 
 /* Lay out the chart for the current view and depth. Returns nodes (cards) and lines (SVG paths). */
@@ -2377,9 +2377,9 @@ function layout(){
   /* Place id's family block with its top at "top" in column c. Returns the block's height. */
   function block(id,c,top){
     drawn.add(id); deepest=Math.max(deepest,c);
-    var us=unionsOf(id), canAdd=editing&&!READONLY&&!FOCUS&&ADDCARDS;
+    var us=unionsOf(id), canAdd=editing&&!READONLY&&(!FOCUS||id===FOCUS.id);
     /* "how they descend": only the families on a line down to that person (and that person's own partners) */
-    if(FOCUS) us=us.filter(function(u){ return id===FOCUS.id?partnerIn(u,id)!=null:u.ch.some(function(k){return FOCUS.set.has(k)}) });
+    if(FOCUS) us=us.filter(function(u){ return id===FOCUS.id?true:u.ch.some(function(k){return FOCUS.set.has(k)}) });
     /* View > Hide partners (not while editing, where the partner cards are needed) */
     var withP=STATE.hidePartners&&!editing?[]:us.filter(function(u){return partnerIn(u,id)!=null});
     var ownH=CH+withP.length*PSLOT+(canAdd?PSLOT:0);
@@ -2395,7 +2395,8 @@ function layout(){
     var nA=spN.filter(function(q){return q.above}).length, nB=nP-nA;
     var kidStart=nodes.length, cur=top, groups=[];
     /* in edit mode, people with no children yet get "Add child" cards even in the last generation shown */
-    if(c<maxCol||(canAdd&&!childrenOf(id).length)){
+    /* when showing how someone descends, editing also shows their own children, so they can be added to */
+    if(c<maxCol||(canAdd&&!childrenOf(id).length)||(canAdd&&FOCUS)){
       /* lay the children out in the same top-to-bottom order as their other parent */
       var list=us.slice().sort(function(a,b){ return (rank.has(a.id)?rank.get(a.id):99)-(rank.has(b.id)?rank.get(b.id):99) }); if(canAdd&&!list.length) list=[{id:null,p:[id],ch:[]}];
       var colB=new Map(), gutB=new Map();
@@ -2410,7 +2411,7 @@ function layout(){
            where the lines run) only has to clear what is already in that column, so a family can slide up beside
            its cousins, and someone with no descendants shown sits beside their nieces and nephews. */
         u.ch.forEach(function(k){
-          if(FOCUS&&!FOCUS.set.has(k)) return;
+          if(FOCUS&&!FOCUS.set.has(k)&&id!==FOCUS.id) return;
           /* "how they descend": someone who married a cousin on another line is drawn once, as the partner card beside that cousin, and the line from their parents runs there */
           if(FOCUS&&!drawn.has(k)&&k!==FOCUS.id){ var fu=unionsOf(k).filter(function(v){ return v.ch.some(function(x){return FOCUS.set.has(x)}) });
             if(fu.length&&fu.every(function(v){ return done.has(v.id)&&spByU.has(v.id) })){ (g.far=g.far||[]).push(spByU.get(fu[0].id)); return } }
@@ -2532,6 +2533,7 @@ function cardHTML(n){
   var more=n.more?'<button type="button" class="beyond" data-a="more" title="'+n.more+' more descendants. Show them." aria-label="'+n.more+' more descendants of '+esc2(p.name)+'"><span>+'+n.more+'</span>&#8250;</button>':'';
   if(n.more) cls+=' hasmore';
   if(openKey===n.key) cls+=' open';
+  if(HLKEY===n.key) cls+=' refhl';
   return '<div class="'+cls+'" style="'+st+'" data-k="'+esc2(n.key)+'"><div class="who"><span class="nm" title="'+esc2(dispName(p))+'">'+nm+'</span><span class="yr">'+yr+'</span></div>'+btns+more+'</div>';
 }
 
@@ -2543,23 +2545,19 @@ function render(keep){
   buildLines(view);
   /* everyone descended from the start person, to mark partners who are also descendants */
   VIEWDESC=new Set(); (function(){ var st=[view]; while(st.length){ childrenOf(st.pop()).forEach(function(k){ if(!VIEWDESC.has(k)){ VIEWDESC.add(k); st.push(k) } }) } })();
-  ADDCARDS=true;
-  if(editing){ var cnt=0, lay=[view], seen=new Set([view]);
-    for(var g=1;g<depth&&lay.length&&cnt<=ADDMAX;g++){ var nx=[]; lay.forEach(function(x){ childrenOf(x).forEach(function(k){ if(!seen.has(k)){ seen.add(k); nx.push(k); cnt++ } }) }); lay=nx }
-    ADDCARDS=cnt<=ADDMAX }
   var L=layout();
   NODES=L.nodes; BYKEY=new Map(NODES.map(function(n){return [n.key,n]}));
   SHOWN=new Map(); NODES.forEach(function(n){ if(n.kind==='p') SHOWN.set(n.id,n.key) });
   MAXCOL=L.cols-1;
   WIDTH=xOf(Math.max(MAXCOL,0))+CW+MX+(NODES.some(function(n){return n.more})?44:L.lines.some(function(l){return l.far&&l.node.c===MAXCOL&&l.node.c<=l.me.c})?GAP/2:0);
   HEIGHT=L.h;
-  var h='';
-  for(var c=0;c<=MAXCOL;c++) if(c%2) h+='<div class="band" style="left:'+(xOf(c)-GAP/2)+'px;width:'+(CW+GAP)+'px"></div>';
-  h+='<svg class="lines" width="'+WIDTH+'" height="'+HEIGHT+'" aria-hidden="true">'+L.lines.map(function(l){
-    return '<path d="'+l.d+'"'+(l.cls?' class="'+l.cls+'"':'')+(l.col?' style="--lc:'+lc(l.col)+'"':'')+'/>' }).join('')+'</svg>';
-  h+=NODES.map(cardHTML).join('');
-  world.innerHTML=h;
+  LINES=L.lines;
+  if(NODES.length>VIRT) LINES.forEach(function(l){ l.bb=pathBox(l.d) });
+  PAINTED=null;
   world.style.width=WIDTH+'px'; world.style.height=HEIGHT+'px';
+  applyScale();
+  if(keep){ vp.scrollLeft=sx; vp.scrollTop=sy }
+  paint(true);
   buildHeads(MAXCOL);
   renderLegend(); renderHeader();
   applyScale();
@@ -2568,6 +2566,34 @@ function render(keep){
   updateStatus();
   renderNotable();
 }
+/* Bounding box [x0,y0,x1,y1] of a line path (M, H, V, h, v and L commands). */
+function pathBox(d){
+  var re=/([MLHVhv])\s*(-?[\d.]+)(?:[\s,]+(-?[\d.]+))?/g, m, x=0, y=0, b=[1e9,1e9,-1e9,-1e9];
+  while((m=re.exec(d))){ var a=+m[2];
+    switch(m[1]){ case 'M': case 'L': x=a; y=+m[3]; break; case 'H': x=a; break; case 'V': y=a; break; case 'h': x+=a; break; case 'v': y+=a }
+    if(x<b[0]) b[0]=x; if(x>b[2]) b[2]=x; if(y<b[1]) b[1]=y; if(y>b[3]) b[3]=y }
+  return b;
+}
+/* Draw the cards and lines. A big chart draws only what is within half a screen of the visible area, and draws again as you scroll or zoom. */
+function paint(force){
+  var big=NODES.length>VIRT, r=null;
+  if(big){ var w=vp.clientWidth/scale, hh=vp.clientHeight/scale, x=vp.scrollLeft/scale, y=vp.scrollTop/scale;
+    if(!force&&PAINTED&&x>=PAINTED[0]&&y>=PAINTED[1]&&x+w<=PAINTED[2]&&y+hh<=PAINTED[3]) return;
+    r=[x-w/2,y-hh/2,x+1.5*w,y+1.5*hh] }
+  else if(!force) return;
+  PAINTED=r;
+  var ae=document.activeElement, fk=null, fa=null;
+  if(ae&&world.contains(ae)){ var fc=ae.closest('[data-k]'); if(fc){ fk=fc.getAttribute('data-k'); fa=ae.getAttribute('data-a') } }
+  var h='';
+  for(var c=0;c<=MAXCOL;c++) if(c%2) h+='<div class="band" style="left:'+(xOf(c)-GAP/2)+'px;width:'+(CW+GAP)+'px"></div>';
+  h+='<svg class="lines" width="'+WIDTH+'" height="'+HEIGHT+'" aria-hidden="true">'+LINES.filter(function(l){ return !r||!(l.bb[2]<r[0]||l.bb[0]>r[2]||l.bb[3]<r[1]||l.bb[1]>r[3]) }).map(function(l){
+    return '<path d="'+l.d+'"'+(l.cls?' class="'+l.cls+'"':'')+(l.col?' style="--lc:'+lc(l.col)+'"':'')+'/>' }).join('')+'</svg>';
+  h+=NODES.filter(function(n){ if(!r) return true; var x=xOf(n.c); return !(x+CW<r[0]||x>r[2]||n.y+CH<r[1]||n.y>r[3]) }).map(cardHTML).join('');
+  world.innerHTML=h;
+  if(fk){ var el=world.querySelector('[data-k="'+cssq(fk)+'"]'); if(el){ var t=fa&&el.querySelector('[data-a="'+fa+'"]')||(el.matches('button')?el:null); if(t) try{ t.focus({preventScroll:true}) }catch(_){} } }
+}
+var paintReq=0;
+function paintSoon(){ if(NODES.length>VIRT&&!paintReq) paintReq=requestAnimationFrame(function(){ paintReq=0; paint() }) }
 function renderHeader(){
   var p=P.get(view);
   $('#title').textContent=dispName(p);
@@ -2587,7 +2613,7 @@ function updateStatus(){
   if(FOCUS){ var on=0; NODES.forEach(function(x){ if(x.kind==='p'&&FOCUS.set.has(x.id)) on++ });
     $('#status').textContent=(FOCUS.paths===1?'One line':FOCUS.paths+' lines')+' of descent through '+on+' people · '+(FOCUS.gens.length>1?FOCUS.gens.join(', ')+' generations down':FOCUS.gens[0]+(FOCUS.gens[0]===1?' generation':' generations')+' down'); return }
   var total=descCount(view);
-  $('#status').textContent=n+' people'+(STATE.hidePartners&&!editing?'':' and '+sp+' partners')+' shown · '+(n-1)+' of '+total+' descendants'+(editing&&!ADDCARDS?' · Add people from a card\'s details (⌄)':'');
+  $('#status').textContent=n+' people'+(STATE.hidePartners&&!editing?'':' and '+sp+' partners')+' shown · '+(n-1)+' of '+total+' descendants';
 }
 
 /* ---------- depth ---------- */
@@ -2615,6 +2641,7 @@ function zoomTo(s,cx,cy){
   scale=s; applyScale();
   vp.scrollLeft=wx*scale-cx; vp.scrollTop=wy*scale-cy;
   if(openKey) placePop();
+  paintSoon();
 }
 /* Opening view: everything if it fits at a readable size, otherwise a readable zoom centred on the first card. */
 function fitStart(){
@@ -2627,13 +2654,15 @@ function fit(){
   var s=Math.min(vp.clientWidth/WIDTH,vp.clientHeight/HEIGHT,1);
   scale=clamp(s,0.15,1); applyScale(); vp.scrollLeft=0; vp.scrollTop=0;
   if(openKey) placePop();
+  paintSoon();
 }
 function focusNode(key,open){
   var n=BYKEY.get(key); if(!n) return;
   var x=xOf(n.c)*scale, y=n.y*scale;
   vp.scrollTo({left:Math.max(0,x-vp.clientWidth/2+CW*scale/2), top:Math.max(0,y-vp.clientHeight/2+CH*scale/2), behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth'});
   var el=world.querySelector('[data-k="'+cssq(key)+'"]');
-  if(el){ el.classList.remove('refhl'); void el.offsetWidth; el.classList.add('refhl'); setTimeout(function(){ el.classList.remove('refhl') },2600) }
+  HLKEY=key; setTimeout(function(){ if(HLKEY===key){ HLKEY=null; var e2=world.querySelector('[data-k="'+cssq(key)+'"]'); if(e2) e2.classList.remove('refhl') } },2600);
+  if(el){ el.classList.remove('refhl'); void el.offsetWidth; el.classList.add('refhl') }
   if(open) setTimeout(function(){ showPop(key) },260);
 }
 var cssq=function(s){ return String(s).replace(/["\\]/g,'\\$&') };
@@ -2655,8 +2684,8 @@ var cssq=function(s){ return String(s).replace(/["\\]/g,'\\$&') };
     if(!e.ctrlKey&&!e.metaKey) return; e.preventDefault();
     var r=vp.getBoundingClientRect(); zoomTo(scale*Math.exp(-e.deltaY*0.0022),e.clientX-r.left,e.clientY-r.top);
   },{passive:false});
-  vp.addEventListener('scroll',function(){ scrollHeads(); if(openKey) placePop() });
-  window.addEventListener('resize',function(){ layoutHeads(); if(openKey) placePop() });
+  vp.addEventListener('scroll',function(){ scrollHeads(); if(openKey) placePop(); paintSoon() });
+  window.addEventListener('resize',function(){ layoutHeads(); if(openKey) placePop(); paintSoon() });
 })();
 
 /* ---------- details panel ---------- */
@@ -2704,7 +2733,7 @@ function popHTML(key){
   if(id!==view&&ks.length) acts+='<button type="button" class="btn" data-go="'+esc(id)+'" data-mode="root">Show their descendants</button>';
   if(n.kind!=='p'&&SHOWN.has(id)) acts+='<button type="button" class="btn" data-jump="'+esc(SHOWN.get(id))+'">Go to their own card</button>';
   if(ps.length&&!SHOWN.has(ps[0])) acts+='<button type="button" class="btn" data-go="'+esc(topOf(id))+'" data-mode="root" data-find="'+esc(id)+'">Show from '+esc(firstName(P.get(topOf(id))))+'</button>';
-  if(editing&&!READONLY&&!ADDCARDS){
+  if(editing&&!READONLY){
     acts+='<button type="button" class="btn" data-add="partner" data-of="'+esc(id)+'">Add partner</button>';
     var au=us.length?us:[null];
     au.forEach(function(u){ var o=u?partnerIn(u,id):null; acts+='<button type="button" class="btn" data-add="child" data-of="'+esc(id)+'"'+(u?' data-u="'+esc(u.id)+'"':'')+'>Add child'+(o!=null&&au.length>1?' with '+esc(firstName(P.get(o))):'')+'</button>' });

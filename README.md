@@ -58,7 +58,7 @@ Every descendant gets an index number in the style used by *The Randolphs of Vir
 Click **Edit**. Then:
 
 - The **pencil** on a card edits that person: names, sex, dates (exact or about, before, after, between), places, seat or home, occupation, notable for, a Wikipedia link, notes and sources. On a partner card the form also has the marriage date and place.
-- Dashed **Add child** and **Add partner** cards appear under everyone shown. Someone with no children yet gets an **Add child** card even in the last generation shown. On big charts (more than 1,500 people shown) these cards are left out to keep the page fast; use the **Add partner** and **Add child** buttons in a card's details (⌄) instead. When adding a partner you can link someone already in the tree instead of typing them in again, for example a cousin.
+- Dashed **Add child** and **Add partner** cards appear under everyone shown. Someone with no children yet gets an **Add child** card even in the last generation shown. A card's details (⌄) also have **Add partner** and **Add child** buttons. Big charts draw only the cards near the part you are looking at, so they stay fast with the dashed cards shown. When adding a partner you can link someone already in the tree instead of typing them in again, for example a cousin.
 - In a person's form you can move them earlier or later among their brothers and sisters, sort the children by birth year, remove a marriage, open the tree on that person instead, or delete them. Deleting also removes anyone who would no longer be connected to the tree; the form tells you how many first.
 - **Undo** and **Redo** (Ctrl or ⌘ + Z / Y) cover every change. Changes save in the browser as you go.
 
