@@ -23,6 +23,7 @@ var safeUrl=function(u){u=String(u||'').trim();return /^https?:\/\//i.test(u)?u:
 var uid=function(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6)};
 var isUrl=function(w){ return /^https?:\/\//i.test(String(w||'')) };
 function wikiHref(w){ return isUrl(w)?w:'https://en.wikipedia.org/wiki/'+encodeURI(w) }
+function wikiAria(w,name){ return wikiSite(w)==='Wikipedia'?'Open the Wikipedia article for '+name+' in a new tab':'Open the '+wikiSite(w)+' page for '+name+' in a new tab' }
 function wikiSite(w){
   if(!isUrl(w)||/wikipedia\.org/i.test(w)) return 'Wikipedia';
   var h=''; try{ h=new URL(w).hostname }catch(_){} return h.replace(/^www\./,'')||'Link';

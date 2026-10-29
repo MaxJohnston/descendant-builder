@@ -38,6 +38,17 @@ The online site and a downloaded copy keep separate trees, because browsers stor
 - **How they descend from …** in a card's details shows only the lines from the start of the tree down to that person, with every route when they descend more than one way (for example through cousins who married). Someone who married a cousin on another line is drawn once, as the partner beside that cousin, with a dashed line from their own parents that comes in from the left like any other child line. The status line counts the lines of descent and how many generations each takes. **Show everyone** under the title goes back to the full chart.
 - The tree icon on a card starts the chart from that person. The links under the title go back up to their parents, or back to the start of the tree.
 
+## Notable descendants
+
+Click **★ Notable descendants** in the toolbar to open a list of everyone descended from the person at the start of the chart whose **Notable for** field is filled in (set it with the pencil in edit mode). Each entry gives what they are known for, their relationship (for example *great-grandson*), how many generations down they are, and how many lines of descent they have when there is more than one.
+
+- Click someone in the list to show how they descend: the chart keeps only the lines from the start of the chart down to them. Click them again, or **Show everyone**, to go back.
+- The **W** button opens their Wikipedia article (or other linked page) in a new tab.
+
+The Randolph sample marks Thomas Jefferson, Chief Justice John Marshall, Edmund Randolph, Peyton Randolph, John Randolph of Roanoke and others.
+
+Anyone with a **Wikipedia link** also gets a **W** button on their card, partners included.
+
 ## Index numbers
 
 Every descendant gets an index number in the style used by *The Randolphs of Virginia*: one digit per generation, each digit the person's place among their brothers and sisters, with `x` for 10, `a` for 11, `b` for 12 and so on. So `237` is the 7th child of the 3rd child of the 2nd child of the person at the start of the tree. The number is shown in each person's details. The sample tree also keeps the number printed in the book.
@@ -58,7 +69,7 @@ Click **Edit**. Then:
 - **Export as .txt file**: a full backup.
 - **Export as GEDCOM (.ged)**: for Ancestry, FamilySearch, MyHeritage and other programs.
 - **Send someone's ancestry to Pedigree Builder**: pick a person and download a Pedigree Builder file of them and all their ancestors in this tree.
-- **Import**: a Descendant Builder backup, a **Pedigree Builder** backup (the ancestors become a descendant tree), or a GEDCOM file. After importing, choose who the chart starts from: the list suggests the people furthest back (with how many generations are below them), or find any ancestor by name. Until you choose, it starts from the earliest paternal ancestor.
+- **Import**: a Descendant Builder or **Pedigree Builder** backup (.txt) or read-only web page (.html, including packed pages), or a GEDCOM file. A Pedigree Builder tree's ancestors become a descendant tree. After importing, choose who the chart starts from: the list suggests the people furthest back (with how many generations are below them), or find any ancestor by name. Until you choose, it starts from the earliest paternal ancestor.
 - **View → Save as read-only web page** makes a single HTML file of the chart that anyone can open.
 
 ## File format

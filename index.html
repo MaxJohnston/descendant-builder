@@ -25,6 +25,7 @@
       <button class="btn sq" id="zin" type="button" aria-label="Zoom in">+</button>
     </div>
     <button class="btn" id="fit" type="button">Fit to screen</button>
+    <button class="btn" id="nd" type="button" aria-pressed="false" aria-controls="ndp"><span class="tg" aria-hidden="true">&#9733;</span>Notable descendants</button>
     <div class="mwrap"><button class="btn" id="viewbtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="viewmenu">View <span class="car" aria-hidden="true">&#9662;</span></button>
       <div class="menu" id="viewmenu" role="group" aria-label="View options" hidden>
         <label class="chk" for="showliv"><input type="checkbox" id="showliv"> Show birth years of living people</label>
@@ -55,6 +56,9 @@
   <p class="status"><span id="status"></span><span class="hintkeys"> &nbsp;·&nbsp; Drag to pan, Ctrl or &#8984; + scroll to zoom</span></p>
 </div>
 
+<div class="work">
+<section class="czp" id="ndp" aria-label="Notable descendants" hidden></section>
+
 <main class="stage" id="stage">
   <div class="heads" id="heads" aria-hidden="true"><div class="hin" id="hin"></div></div>
   <div class="viewport" id="vp" tabindex="0" aria-label="Descendant chart. Scroll or drag to pan.">
@@ -62,6 +66,7 @@
   </div>
   <div class="pop" id="pop" role="dialog" aria-label="Person details" tabindex="-1" hidden></div>
 </main>
+</div>
 
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="scrim" id="scrim" hidden></div>

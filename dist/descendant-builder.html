@@ -338,6 +338,33 @@ body.readonly #edit,body.readonly #editbar,body.readonly [data-ro],body.readonly
 .rootpick .combo{position:relative;display:block}
 .rootpick .combolist.rplist{position:static;max-height:240px;overflow:auto;display:block}
 .rootpick li.cur{outline:2px solid var(--star);outline-offset:-2px}
+
+/* ---------- notable descendants ---------- */
+.btn .tg{margin-right:6px;font-size:13px;line-height:1}
+.czp{border:1px solid var(--rule);border-radius:10px;background:var(--surface);padding:8px 10px;max-height:min(24vh,220px);overflow:auto}
+.czp[hidden]{display:none}
+.czp h2{margin:0 4px 6px;font:500 11px var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.czp .t2{font-size:12px;color:var(--muted)}
+.czl{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr));gap:2px 8px}
+.czl li{position:relative}
+/* Desktop: the list is a panel on the left and the chart fills the rest. Phone: the list sits above the chart. */
+.work{display:contents}
+@media (min-width:641px){
+  .work{display:flex;flex:1;min-height:340px;gap:12px}
+  .work>.stage{flex:1 1 0;min-width:0}
+  .czp{flex:0 0 340px;width:340px;max-height:none}
+  .czl{grid-template-columns:1fr}
+}
+.czi{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:6px;padding:6px 40px 6px 8px;color:var(--fg);font:inherit;cursor:pointer}
+.czi:hover,.czi[aria-pressed="true"]{background:var(--band)}
+.czi[aria-pressed="true"]{box-shadow:inset 0 0 0 1.5px var(--star)}
+.czi .n2{font:500 15px/1.2 var(--font-display)}
+.czi .r2{display:block;font-size:12.5px;margin-top:1px}
+.czi .v2{display:block;font-size:11.5px;color:var(--muted);margin-top:1px}
+.czw{position:absolute;right:6px;top:8px;color:var(--muted)}
+.czw:hover{color:var(--fg)}
+/* Wikipedia button on cards */
+.card a.ico.wiki{text-decoration:none}
 </style>
 </head>
 <body>
@@ -356,6 +383,7 @@ body.readonly #edit,body.readonly #editbar,body.readonly [data-ro],body.readonly
       <button class="btn sq" id="zin" type="button" aria-label="Zoom in">+</button>
     </div>
     <button class="btn" id="fit" type="button">Fit to screen</button>
+    <button class="btn" id="nd" type="button" aria-pressed="false" aria-controls="ndp"><span class="tg" aria-hidden="true">&#9733;</span>Notable descendants</button>
     <div class="mwrap"><button class="btn" id="viewbtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="viewmenu">View <span class="car" aria-hidden="true">&#9662;</span></button>
       <div class="menu" id="viewmenu" role="group" aria-label="View options" hidden>
         <label class="chk" for="showliv"><input type="checkbox" id="showliv"> Show birth years of living people</label>
@@ -386,6 +414,9 @@ body.readonly #edit,body.readonly #editbar,body.readonly [data-ro],body.readonly
   <p class="status"><span id="status"></span><span class="hintkeys"> &nbsp;·&nbsp; Drag to pan, Ctrl or &#8984; + scroll to zoom</span></p>
 </div>
 
+<div class="work">
+<section class="czp" id="ndp" aria-label="Notable descendants" hidden></section>
+
 <main class="stage" id="stage">
   <div class="heads" id="heads" aria-hidden="true"><div class="hin" id="hin"></div></div>
   <div class="viewport" id="vp" tabindex="0" aria-label="Descendant chart. Scroll or drag to pan.">
@@ -393,6 +424,7 @@ body.readonly #edit,body.readonly #editbar,body.readonly [data-ro],body.readonly
   </div>
   <div class="pop" id="pop" role="dialog" aria-label="Person details" tabindex="-1" hidden></div>
 </main>
+</div>
 
 <div class="toast" id="toast" role="status" hidden></div>
 <div class="scrim" id="scrim" hidden></div>
@@ -400,7 +432,7 @@ body.readonly #edit,body.readonly #editbar,body.readonly [data-ro],body.readonly
 
 <script>
 /* Descendant Builder · js/sample-data.js
-   The sample tree: William Randolph of Turkey Island, Mary Isham and four generations of their descendants (the first five generations of the book),
+   The sample tree: William Randolph of Turkey Island, Mary Isham and four generations of their descendants,
    transcribed from Robert Isham Randolph, "The Randolphs of Virginia" (Chicago, 1936). Each person keeps the
    book's index number (idx), its page as a source, and the book entry in their notes. */
 var SAMPLE={"v":1,"app":"descendant-builder","root":"r","sample":true,"sampleNote":"From Robert Isham Randolph, The Randolphs of Virginia (1936). Press Edit to make it your own.","people":[{"id":"r","name":"William Randolph","fn":"William","ln":"Randolph","sex":"M","b":1651,"bp":"Yorkshire, England","d":1711,"dm":4,"ddy":11,"seat":"Turkey Island","star":"Colonial planter and merchant; founder of the Randolph family of Virginia","wiki":"William_Randolph","notes":"Son of Richard Randolph and Elizabeth Ryland. Emigrated to America in 1674.","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 11"}]},
@@ -415,7 +447,7 @@ var SAMPLE={"v":1,"app":"descendant-builder","root":"r","sample":true,"sampleNot
 {"id":"s121","name":"Mary Skipwith","fn":"Mary","ln":"Skipwith","sex":"F","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 11"}]},
 {"id":"p1211","idx":"1211","name":"Peter Randolph","fn":"Peter","ln":"Randolph","sex":"M","notes":"Book entry 1211: \"Peter Randolph, m. Eliza Southall, dau. James Southall\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 11"}]},
 {"id":"s1211","name":"Eliza Southall","fn":"Eliza","ln":"Southall","notes":"Daughter of James Southall.","sex":"F","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 11"}]},
-{"id":"p122","idx":"122","name":"Beverley Randolph","fn":"Beverley","ln":"Randolph","b":1744,"d":1797,"sex":"M","notes":"Book entry 122: \"Beverley Randolph, b. 1744, d. 1797, m. Martha (Patty) Cocke\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 11"}]},
+{"id":"p122","idx":"122","name":"Beverley Randolph","fn":"Beverley","ln":"Randolph","b":1744,"d":1797,"sex":"M","notes":"Book entry 122: \"Beverley Randolph, b. 1744, d. 1797, m. Martha (Patty) Cocke\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 11"}],"star":"Governor of Virginia","wiki":"Beverley_Randolph"},
 {"id":"s122","name":"Martha Cocke","fn":"Martha","ln":"Cocke","sex":"F","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 11"}]},
 {"id":"p1221","idx":"1221","name":"Lucy Bolling Randolph","fn":"Lucy","mn":"Bolling","ln":"Randolph","sex":"F","notes":"Book entry 1221: \"Lucy Bolling Randolph, m. William Randolph, see (2115) for male line\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 11"}]},
 {"id":"p123","idx":"123","name":"Robert Randolph","fn":"Robert","ln":"Randolph","b":1760,"d":1825,"dm":9,"ddy":12,"sex":"M","notes":"Book entry 123: \"Robert Randolph, b. 1760, d. 9/12/1825, m. Elizabeth Carter, dau. Robert Carter\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 11"}]},
@@ -575,11 +607,11 @@ var SAMPLE={"v":1,"app":"descendant-builder","root":"r","sample":true,"sampleNot
 {"id":"s21","name":"Maria Judith Page","fn":"Maria","mn":"Judith","ln":"Page","notes":"Daughter of Mann Page and Judith Wormeley.","sex":"F","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 51"}]},
 {"id":"p211","idx":"211","name":"Thomas Mann Randolph","fn":"Thomas","mn":"Mann","ln":"Randolph","b":1741,"sex":"M","notes":"Book entry 211: \"Thomas Mann Randolph, b. 1741, m. 1st 1761, Anne Cary (541), m. 2nd Gabriella Harvie By first wife:\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 51"}]},
 {"id":"s211_2","name":"Gabriella Harvie","fn":"Gabriella","ln":"Harvie","sex":"F","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 51"}]},
-{"id":"p2111","idx":"2111","name":"Mary Randolph","fn":"Mary","ln":"Randolph","b":1762,"bm":8,"bdy":9,"sex":"F","notes":"Book entry 2111: \"Mary Randolph, b. 8/9/62, m. David Meade Randolph (512)\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 51"}]},
+{"id":"p2111","idx":"2111","name":"Mary Randolph","fn":"Mary","ln":"Randolph","b":1762,"bm":8,"bdy":9,"sex":"F","notes":"Book entry 2111: \"Mary Randolph, b. 8/9/62, m. David Meade Randolph (512)\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 51"}],"star":"Author of The Virginia House-Wife, an early American cookbook","wiki":"Mary_Randolph"},
 {"id":"p2112","idx":"2112","name":"Henry Cary Randolph","fn":"Henry","mn":"Cary","ln":"Randolph","b":1769,"sex":"M","notes":"Died without issue. Book entry 2112: \"Henry Cary Randolph, b. 1769, d. s. p.\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 51"}]},
 {"id":"p2113","idx":"2113","name":"Elizabeth Randolph","fn":"Elizabeth","ln":"Randolph","sex":"F","notes":"Book entry 2113: \"Elizabeth Randolph, b..1765, m. Robert Pleasants\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 51"}]},
 {"id":"s2113","name":"Robert Pleasants","fn":"Robert","ln":"Pleasants","sex":"M","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 51"}]},
-{"id":"p2114","idx":"2114","name":"Thomas Mann Randolph","fn":"Thomas","mn":"Mann","ln":"Randolph","b":1769,"d":1828,"sex":"M","notes":"Book entry 2114: \"Thomas Mann Randolph, b. 1769, d. 1828, m. 1790, Martha Jefferson (3431)\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 51"}]},
+{"id":"p2114","idx":"2114","name":"Thomas Mann Randolph","fn":"Thomas","mn":"Mann","ln":"Randolph","b":1769,"d":1828,"sex":"M","notes":"Book entry 2114: \"Thomas Mann Randolph, b. 1769, d. 1828, m. 1790, Martha Jefferson (3431)\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 51"}],"star":"Governor of Virginia","wiki":"Thomas_Mann_Randolph_Jr."},
 {"id":"p2115","idx":"2115","name":"William Randolph","fn":"William","ln":"Randolph","b":1769,"sex":"M","notes":"Book entry 2115: \"William Randolph, b. 1769, m. Lucy Bolling Randolph (1221)\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 66"}]},
 {"id":"p2116","idx":"2116","name":"Archibald Cary Randolph","fn":"Archibald","mn":"Cary","ln":"Randolph","sex":"M","notes":"Died without issue. Book entry 2116: \"Archibald Cary Randolph, d. s. p.\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 70"}]},
 {"id":"p2117","idx":"2117","name":"Judith Randolph","fn":"Judith","ln":"Randolph","sex":"F","notes":"Book entry 2117: \"Judith Randolph, m. Richard-Randolph (531)\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 70"}]},
@@ -641,7 +673,7 @@ var SAMPLE={"v":1,"app":"descendant-builder","root":"r","sample":true,"sampleNot
 {"id":"p235","idx":"235","name":"Isham Keith","fn":"Isham","ln":"Keith","sex":"M","notes":"Book entry 235: \"Isham Keith\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 79"}]},
 {"id":"p236","idx":"236","name":"Mary RandolphKeith","fn":"Mary","ln":"RandolphKeith","b":1737,"bm":4,"bdy":28,"d":1809,"dm":9,"ddy":19,"sex":"F","notes":"Book entry 236: \"Mary RandolphKeith, b. 4/28/37, d. 9/19/09, m. 1754, Col. Thomas Marshall\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 79"}]},
 {"id":"s236","name":"Thomas Marshall","fn":"Thomas","ln":"Marshall","sex":"M","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 79"}]},
-{"id":"p2361","idx":"2361","name":"John Marshall","fn":"John","ln":"Marshall","b":1755,"bm":9,"bdy":24,"d":1833,"dm":7,"ddy":6,"sex":"M","notes":"Book entry 2361: \"John Marshall, Chief Justice of the United States, b. 9/24/55, d. 7/6/33, m. 1/3/83, Mary Willis Ambler, b. 3/17/65, d. 12/25/31\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 79"}]},
+{"id":"p2361","idx":"2361","name":"John Marshall","fn":"John","ln":"Marshall","b":1755,"bm":9,"bdy":24,"d":1833,"dm":7,"ddy":6,"sex":"M","notes":"Book entry 2361: \"John Marshall, Chief Justice of the United States, b. 9/24/55, d. 7/6/33, m. 1/3/83, Mary Willis Ambler, b. 3/17/65, d. 12/25/31\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 79"}],"star":"4th Chief Justice of the United States","wiki":"John_Marshall"},
 {"id":"s2361","name":"Mary Willis Ambler","fn":"Mary","mn":"Willis","ln":"Ambler","b":1765,"bm":3,"bdy":17,"d":1831,"dm":12,"ddy":25,"sex":"F","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 79"}]},
 {"id":"p2362","idx":"2362","name":"Elizabeth Marshall","fn":"Elizabeth","ln":"Marshall","b":1756,"d":1842,"sex":"F","notes":"Book entry 2362: \"Elizabeth Marshall, b. 1756, d. 1842, m. 10/15/85, Raleigh Colston\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 84"}]},
 {"id":"s2362","name":"Raleigh Colston","fn":"Raleigh","ln":"Colston","sex":"M","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 84"}]},
@@ -800,9 +832,9 @@ var SAMPLE={"v":1,"app":"descendant-builder","root":"r","sample":true,"sampleNot
 {"id":"s3425","name":"Edward Archer","fn":"Edward","ln":"Archer","sex":"M","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 115"}]},
 {"id":"p3426","idx":"3426","name":"Robert Bolling","fn":"Robert","ln":"Bolling","sex":"M","notes":"Book entry 3426: \"Robert Bolling, m. Jane Payne\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 115"}]},
 {"id":"s3426","name":"Jane Payne","fn":"Jane","ln":"Payne","sex":"F","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 115"}]},
-{"id":"p343","idx":"343","name":"Thomas Jefferson","fn":"Thomas","ln":"Jefferson","b":1743,"bm":4,"bdy":2,"d":1826,"dm":7,"ddy":4,"sex":"M","notes":"Book entry 343: \"Thomas Jefferson, President of the United States, b. 4/2/43, d. 7/4/26, m. 1/1/72, Martha Wayles, Dau. John Wayles, widow Bathurst Skelton\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 115"}]},
+{"id":"p343","idx":"343","name":"Thomas Jefferson","fn":"Thomas","ln":"Jefferson","b":1743,"bm":4,"bdy":2,"d":1826,"dm":7,"ddy":4,"sex":"M","notes":"Book entry 343: \"Thomas Jefferson, President of the United States, b. 4/2/43, d. 7/4/26, m. 1/1/72, Martha Wayles, Dau. John Wayles, widow Bathurst Skelton\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 115"}],"star":"3rd President of the United States; author of the Declaration of Independence","wiki":"Thomas_Jefferson"},
 {"id":"s343","name":"Martha Wayles","fn":"Martha","ln":"Wayles","notes":"Daughter of John Wayles; Widow Bathurst Skelton.","sex":"F","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 115"}]},
-{"id":"p3431","idx":"3431","name":"Martha Jefferson","fn":"Martha","ln":"Jefferson","b":1772,"d":1836,"sex":"F","notes":"Book entry 3431: \"Martha Jefferson, b. 1772, d. 1836, m. 1790, Gov. Thomas Mann Randolph (2114)\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 115"}]},
+{"id":"p3431","idx":"3431","name":"Martha Jefferson","fn":"Martha","ln":"Jefferson","b":1772,"d":1836,"sex":"F","notes":"Book entry 3431: \"Martha Jefferson, b. 1772, d. 1836, m. 1790, Gov. Thomas Mann Randolph (2114)\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 115"}],"star":"Daughter of Thomas Jefferson; acting First Lady","wiki":"Martha_Jefferson_Randolph"},
 {"id":"p3432","idx":"3432","name":"Maria Jefferson","fn":"Maria","ln":"Jefferson","b":1778,"d":1804,"sex":"F","notes":"Book entry 3432: \"Maria Jefferson, b. 1778, d. 1804, m. John Wayles Eppes, b. 1773, d. 1823. He married second Martha Jones, the widow Burton By first wife:\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 115"}]},
 {"id":"s3432","name":"John Wayles Eppes","fn":"John","mn":"Wayles","ln":"Eppes","b":1773,"d":1823,"sex":"M","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 115"}]},
 {"id":"p3433","idx":"3433","name":"Jane Randolph Jefferson","fn":"Jane","mn":"Randolph","ln":"Jefferson","b":1773,"d":1775,"sex":"F","notes":"Book entry 3433: \"Jane Randolph Jefferson, b. 1773, d. 1775\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 118"}]},
@@ -1149,11 +1181,11 @@ var SAMPLE={"v":1,"app":"descendant-builder","root":"r","sample":true,"sampleNot
 {"id":"s41","name":"Sarah Wormeley","fn":"Sarah","ln":"Wormeley","notes":"Daughter of John and Elizabeth Wormeley.","sex":"F","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 197"}]},
 {"id":"p411","idx":"411","sex":"F","name":"Daughter Randolph","ln":"Randolph","notes":"Book entry 411: \"Daughter Randolph\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 197"}]},
 {"id":"p412","idx":"412","sex":"F","name":"Daughter Randolph","ln":"Randolph","notes":"Book entry 412: \"Daughter Randolph\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 197"}]},
-{"id":"p42","idx":"42","name":"Peyton Randolph","fn":"Peyton","ln":"Randolph","b":1722,"sex":"M","notes":"Book entry 42: \"Peyton Randolph, b. 1722, m. Elizabeth Harrison, daughter of Benjamin Harrison and Anne Carter, d. 10/22/75\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 197"}]},
+{"id":"p42","idx":"42","name":"Peyton Randolph","fn":"Peyton","ln":"Randolph","b":1722,"sex":"M","notes":"Book entry 42: \"Peyton Randolph, b. 1722, m. Elizabeth Harrison, daughter of Benjamin Harrison and Anne Carter, d. 10/22/75\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 197"}],"star":"First President of the Continental Congress","wiki":"Peyton_Randolph"},
 {"id":"s42","name":"Elizabeth Harrison","fn":"Elizabeth","ln":"Harrison","d":1775,"dm":10,"ddy":22,"notes":"Daughter of Benjamin Harrison and Anne Carter.","sex":"F","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 197"}]},
 {"id":"p43","idx":"43","name":"John Randolph","fn":"John","ln":"Randolph","b":1728,"d":1784,"dm":6,"ddy":31,"sex":"M","notes":"Book entry 43: \"John Randolph, b. 1728, d. 6/31/84, m. 1744, Arianna Jennings, daughter of Edmund Jennings and Arianna Vanderhuyden\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 197"}]},
 {"id":"s43","name":"Arianna Jennings","fn":"Arianna","ln":"Jennings","notes":"Daughter of Edmund Jennings and Arianna Vanderhuyden.","sex":"F","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 197"}]},
-{"id":"p431","idx":"431","name":"Edmund Randolph","fn":"Edmund","ln":"Randolph","b":1753,"bm":8,"bdy":10,"d":1812,"dm":9,"ddy":12,"sex":"M","notes":"Book entry 431: \"Edmund Randolph, first Attorney General of the United States and Governor of Virginia, b. 8/10/53, d. 9/12/12, m. 8/29/76, Elizabeth Nicholas, daughter -of Robert Carter Nicholas and Anne Cary.\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 197"}]},
+{"id":"p431","idx":"431","name":"Edmund Randolph","fn":"Edmund","ln":"Randolph","b":1753,"bm":8,"bdy":10,"d":1812,"dm":9,"ddy":12,"sex":"M","notes":"Book entry 431: \"Edmund Randolph, first Attorney General of the United States and Governor of Virginia, b. 8/10/53, d. 9/12/12, m. 8/29/76, Elizabeth Nicholas, daughter -of Robert Carter Nicholas and Anne Cary.\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 197"}],"star":"1st Attorney General of the United States; Governor of Virginia","wiki":"Edmund_Randolph"},
 {"id":"s431","name":"Elizabeth Nicholas","fn":"Elizabeth","ln":"Nicholas","notes":"Daughter -of Robert Carter Nicholas and Anne Cary..","sex":"F","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 197"}]},
 {"id":"p4311","idx":"4311","name":"Susan Beverley Randolph","fn":"Susan","mn":"Beverley","ln":"Randolph","b":1781,"d":1846,"dm":10,"ddy":12,"sex":"F","notes":"Book entry 4311: \"Susan Beverley Randolph, b. 1781, d. 10/12/46, m. Bennett Taylor\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 197"}]},
 {"id":"s4311","name":"Bennett Taylor","fn":"Bennett","ln":"Taylor","sex":"M","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 197"}]},
@@ -1346,7 +1378,7 @@ var SAMPLE={"v":1,"app":"descendant-builder","root":"r","sample":true,"sampleNot
 {"id":"p5311","idx":"5311","name":"John St. George Randolph","fn":"John","mn":"St. George","ln":"Randolph","sex":"M","notes":"Died without issue. Book entry 5311: \"John St. George Randolph, d. s. p.\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 222"}]},
 {"id":"p5312","idx":"5312","name":"Theodorick Tudor Randolph","fn":"Theodorick","mn":"Tudor","ln":"Randolph","b":1796,"sex":"M","notes":"Book entry 5312: \"Theodorick Tudor Randolph, b. 1796, d. s. p. 1815\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 222"}]},
 {"id":"p532","idx":"532","name":"Theodorick Randolph","fn":"Theodorick","ln":"Randolph","b":1771,"bm":1,"bdy":22,"sex":"M","notes":"Book entry 532: \"Theodorick Randolph, b. 1/22/71, d. s. p. 2/14/92\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 222"}]},
-{"id":"p533","idx":"533","name":"John Randolph","fn":"John","ln":"Randolph","seat":"Roanoke","sex":"M","notes":"Book entry 533: \"John Randolph of Roanoke, b., 6/3/73, d. s. p. 5/24/33\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 222"}]},
+{"id":"p533","idx":"533","name":"John Randolph","fn":"John","ln":"Randolph","seat":"Roanoke","sex":"M","notes":"Book entry 533: \"John Randolph of Roanoke, b., 6/3/73, d. s. p. 5/24/33\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 222"}],"star":"U.S. Representative and Senator from Virginia","wiki":"John_Randolph_of_Roanoke"},
 {"id":"p54","idx":"54","name":"Mary Randolph","fn":"Mary","ln":"Randolph","b":1727,"bm":11,"bdy":21,"d":1781,"dm":11,"ddy":5,"sex":"F","notes":"Book entry 54: \"Mary Randolph, b. 11/21/1727, d. 11/5/81, m. Archibald Cary, son of Henry Cary\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 222"}]},
 {"id":"s54","name":"Archibald Cary","fn":"Archibald","ln":"Cary","notes":"Son of Henry Cary.","sex":"M","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 222"}]},
 {"id":"p541","idx":"541","name":"Anne Cary","fn":"Anne","ln":"Cary","sex":"F","notes":"Book entry 541: \"Anne Cary, m. Thomas Mann Randolph (211)\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 222"}]},
@@ -1381,7 +1413,7 @@ var SAMPLE={"v":1,"app":"descendant-builder","root":"r","sample":true,"sampleNot
 {"id":"p57","idx":"57","name":"Ryland Randolph","fn":"Ryland","ln":"Randolph","sex":"M","notes":"Died without issue. Book entry 57: \"Ryland Randolph, d. s. p.\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 227"}]},
 {"id":"p6","idx":"6","name":"Elizabeth Randolph","fn":"Elizabeth","ln":"Randolph","d":1719,"dm":1,"ddy":22,"sex":"F","notes":"Book entry 6: \"Elizabeth Randolph, d. 1/22/1719, m. 2/11/1701, 2nd wife, Richard Bland, b. 1665, d. 4/16/1720, son of Theodorick Bland and Anne Bennett\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 229"}]},
 {"id":"s6","name":"Richard Bland","fn":"Richard","ln":"Bland","b":1665,"d":1720,"dm":4,"ddy":16,"notes":"Son of Theodorick Bland and Anne Bennett.","sex":"M","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 229"}]},
-{"id":"p61","idx":"61","name":"Richard Bland","fn":"Richard","ln":"Bland","b":1710,"bm":5,"bdy":5,"d":1776,"sex":"M","notes":"Book entry 61: \"Richard Bland, b. 5/5/1710, d. 1776, m. 1st, Anne Poythress, b. 12/13/12, d. 4/9/58.'She was the only daughter of Peter Poythress. They had twelve children.\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 229"}]},
+{"id":"p61","idx":"61","name":"Richard Bland","fn":"Richard","ln":"Bland","b":1710,"bm":5,"bdy":5,"d":1776,"sex":"M","notes":"Book entry 61: \"Richard Bland, b. 5/5/1710, d. 1776, m. 1st, Anne Poythress, b. 12/13/12, d. 4/9/58.'She was the only daughter of Peter Poythress. They had twelve children.\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 229"}],"star":"Member of the Continental Congress and political writer","wiki":"Richard_Bland"},
 {"id":"s61","name":"Anne Poythress","fn":"Anne","ln":"Poythress","b":1712,"bm":12,"bdy":13,"d":1758,"dm":4,"ddy":9,"sex":"F","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 229"}]},
 {"id":"p611","idx":"611","name":"Mary Bland","fn":"Mary","ln":"Bland","sex":"F","notes":"Book entry 611: \"Mary Bland\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 229"}]},
 {"id":"p612","idx":"612","name":"Sarah Bland","fn":"Sarah","ln":"Bland","sex":"F","notes":"Book entry 612: \"Sarah Bland\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 229"}]},
@@ -1515,7 +1547,7 @@ var SAMPLE={"v":1,"app":"descendant-builder","root":"r","sample":true,"sampleNot
 {"id":"p654","idx":"654","name":"William Munford","fn":"William","ln":"Munford","b":1734,"bm":11,"bdy":28,"sex":"M","notes":"Book entry 654: \"William Munford, b. 11/28/1734\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 248"}]},
 {"id":"p7","idx":"7","name":"Mary Randolph","fn":"Mary","ln":"Randolph","b":1692,"sex":"F","notes":"Book entry 7: \"Mary Randolph, b. 1692, m. 1712, John Stith\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 249"}]},
 {"id":"s7","name":"John Stith","fn":"John","ln":"Stith","sex":"M","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 249"}]},
-{"id":"p71","idx":"71","name":"William Stith","fn":"William","ln":"Stith","occ":"Rev. (title)","sex":"M","notes":"Book entry 71: \"Rev. William Stith, m. Judith Randolph (22)\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 249"}]},
+{"id":"p71","idx":"71","name":"William Stith","fn":"William","ln":"Stith","occ":"Rev. (title)","sex":"M","notes":"Book entry 71: \"Rev. William Stith, m. Judith Randolph (22)\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 249"}],"star":"Historian of Virginia; President of the College of William & Mary","wiki":"William_Stith"},
 {"id":"p72","idx":"72","name":"John Stith","fn":"John","ln":"Stith","sex":"M","notes":"Book entry 72: \"John Stith, m. Mary Fleming\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 249"}]},
 {"id":"s72","name":"Mary Fleming","fn":"Mary","ln":"Fleming","sex":"F","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 249"}]},
 {"id":"p73","idx":"73","name":"Mary Randolph Stith","fn":"Mary","mn":"Randolph","ln":"Stith","sex":"F","notes":"Book entry 73: \"Mary Randolph Stith, m. Rev. William Dawson\"","src":[{"f":"all","ti":"Robert Isham Randolph, The Randolphs of Virginia (Chicago, 1936), p. 249"}]},
@@ -2137,6 +2169,7 @@ var safeUrl=function(u){u=String(u||'').trim();return /^https?:\/\//i.test(u)?u:
 var uid=function(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6)};
 var isUrl=function(w){ return /^https?:\/\//i.test(String(w||'')) };
 function wikiHref(w){ return isUrl(w)?w:'https://en.wikipedia.org/wiki/'+encodeURI(w) }
+function wikiAria(w,name){ return wikiSite(w)==='Wikipedia'?'Open the Wikipedia article for '+name+' in a new tab':'Open the '+wikiSite(w)+' page for '+name+' in a new tab' }
 function wikiSite(w){
   if(!isUrl(w)||/wikipedia\.org/i.test(w)) return 'Wikipedia';
   var h=''; try{ h=new URL(w).hostname }catch(_){} return h.replace(/^www\./,'')||'Link';
@@ -2494,6 +2527,7 @@ function cardHTML(n){
   var nm=esc2(dispName(p))+(p.sx&&!/[,\s]/.test(p.sx)?'':'');
   if(n.kind==='p'&&n.id!==view&&childrenOf(n.id).length) btns+='<button type="button" class="ico" data-a="view" aria-label="Show the descendants of '+esc2(p.name)+'" title="Start the chart from '+esc2(p.name)+'">'+ICON_TREE+'</button>';
   if(editing&&!READONLY&&n.kind!=='ref') btns+='<button type="button" class="ico pen" data-a="edit" aria-label="Edit '+esc2(p.name)+'">'+ICON_PEN+'</button>';
+  if(p.wiki) btns+='<a class="ico wiki" href="'+esc2(wikiHref(p.wiki))+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc2(wikiAria(p.wiki,p.name))+'" title="'+esc2(wikiSite(p.wiki))+' (opens in a new tab)"><span class="wglyph" aria-hidden="true">W</span></a>';
   btns+='<button type="button" class="ico" data-a="open" aria-expanded="'+(openKey===n.key)+'" aria-label="Details for '+esc2(p.name)+'">'+ICON_CHEV+'</button>';
   var more=n.more?'<button type="button" class="beyond" data-a="more" title="'+n.more+' more descendants. Show them." aria-label="'+n.more+' more descendants of '+esc2(p.name)+'"><span>+'+n.more+'</span>&#8250;</button>':'';
   if(n.more) cls+=' hasmore';
@@ -2532,6 +2566,7 @@ function render(keep){
   if(keep){ vp.scrollLeft=sx; vp.scrollTop=sy }
   if(openKey&&BYKEY.has(openKey)) showPop(openKey); else closePop(true);
   updateStatus();
+  renderNotable();
 }
 function renderHeader(){
   var p=P.get(view);
@@ -2719,8 +2754,8 @@ function setView(id){
   fillDepth(); render(); fitStart(); saveView();
 }
 /* Show only the lines from the start of the tree down to one person: every way they descend from it. */
-function showLineage(id){
-  var root=STATE.root, down=new Set([root]), st=[root];
+function showLineage(id,from){
+  var root=from&&P.has(from)?from:STATE.root, down=new Set([root]), st=[root];
   while(st.length){ childrenOf(st.pop()).forEach(function(k){ if(!down.has(k)){ down.add(k); st.push(k) } }) }
   if(!down.has(id)||id===root) return;
   var set=new Set([id]); st=[id];
@@ -2732,7 +2767,7 @@ function showLineage(id){
     memo.set(x,m); return m };
   var gm=walk(id), paths=0, gens=[]; gm.forEach(function(n,g){ paths+=n; gens.push(g) }); gens.sort(function(a,b){return a-b});
   var prev=FOCUS?FOCUS.prev:{view:view, depth:depth};
-  FOCUS={id:id, set:set, paths:paths, gens:gens, prev:prev};
+  FOCUS={id:id, set:set, paths:paths, gens:gens, prev:prev, from:root};
   view=root; openKey=null; depth=gens[gens.length-1]+1;
   fillDepth(); render(); fitStart();
   if(SHOWN.has(id)) focusNode(SHOWN.get(id));
@@ -2743,10 +2778,55 @@ function endLineage(){
   fillDepth(); render(); fitStart();
   if(SHOWN.has(id)) focusNode(SHOWN.get(id),true);
 }
+/* ---------- notable descendants ----------
+   Everyone descended from the start of the chart whose "Notable for" is filled in. Clicking one shows how they descend
+   (every line from the start of the chart down to them); clicking again goes back to the full chart. */
+var NDON=false; try{ NDON=localStorage.getItem('descendant-builder-nd')==='1' }catch(_){}
+function linesTo(from,id){
+  var memo=new Map();
+  var walk=function(x){ if(x===from) return 1; if(memo.has(x)) return memo.get(x); memo.set(x,0);
+    var n=0; parentsOf(x).forEach(function(q){ if(q===from||VIEWDESC.has(q)) n+=walk(q) }); memo.set(x,n); return n };
+  return walk(id);
+}
+function renderNotable(){
+  var panel=$('#ndp'), btn=$('#nd'); if(!panel||!btn) return;
+  btn.setAttribute('aria-pressed',NDON?'true':'false');
+  if(!NDON){ panel.hidden=true; panel.innerHTML=''; return }
+  var from=view, list=[];
+  VIEWDESC.forEach(function(id){ var p=P.get(id); if(p&&p.star) list.push({id:id, g:genFrom(from,id)}) });
+  list.sort(function(a,b){ return a.g-b.g||(P.get(a.id).b||9999)-(P.get(b.id).b||9999) });
+  var fp=P.get(from), h='<h2>Notable descendants of '+esc(dispName(fp))+' · '+list.length+'</h2>';
+  if(fp&&fp.star) h+='<p class="t2" style="margin:0 4px 8px"><span class="sdot">&#9733;</span> '+esc(dispName(fp))+': '+esc(fp.star)+'</p>';
+  if(!list.length) h+='<p class="t2" style="margin:4px">No one descended from '+esc(firstName(fp))+' has <b>Notable for</b> filled in. Add it with the pencil in edit mode.</p>';
+  else{
+    h+='<ul class="czl">';
+    list.forEach(function(x){
+      var p=P.get(x.id), sel=!!(FOCUS&&FOCUS.id===x.id), n=linesTo(from,x.id), y=years(p);
+      h+='<li><button class="czi" type="button" data-nd="'+esc(x.id)+'" aria-pressed="'+sel+'">'+
+        '<span class="n2">'+(sel?'<span class="sdot" aria-hidden="true">&#9733;</span> ':'')+esc(dispName(p))+'</span>'+(y?' <span class="t2">'+esc(y)+'</span>':'')+
+        '<span class="r2">'+esc(p.star)+'</span>'+
+        '<span class="v2">'+esc(relWord(x.g,sexOf(x.id)))+' · '+x.g+(x.g===1?' generation':' generations')+' down'+(n>1?' · '+n+' lines of descent':'')+'</span>'+
+        '<span class="v2">'+(sel?'Showing how they descend · click to show everyone':'Click to show how they descend')+'</span></button>'+
+        (p.wiki?'<a class="ico czw" href="'+esc(wikiHref(p.wiki))+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(wikiAria(p.wiki,p.name))+'" title="'+esc(wikiSite(p.wiki))+' (opens in a new tab)"><span class="wglyph" aria-hidden="true">W</span></a>':'')+'</li>';
+    });
+    h+='</ul>';
+  }
+  var st=panel.scrollTop; panel.innerHTML=h; panel.hidden=false; panel.scrollTop=st;
+}
+$('#nd').addEventListener('click',function(){
+  NDON=!NDON; try{ localStorage.setItem('descendant-builder-nd',NDON?'1':'0') }catch(_){}
+  renderNotable();
+});
+$('#ndp').addEventListener('click',function(e){
+  var b=e.target.closest('[data-nd]'); if(!b) return;
+  var id=b.getAttribute('data-nd');
+  if(FOCUS&&FOCUS.id===id) endLineage(); else showLineage(id,FOCUS?FOCUS.from:view);
+  var again=$('#ndp').querySelector('[data-nd="'+cssq(id)+'"]'); if(again) try{ again.focus({preventScroll:true}) }catch(_){}
+});
 function readHash(){ var h=decodeURIComponent(location.hash.slice(1)); return P.has(h)?h:null }
 
 world.addEventListener('click',function(e){
-  var card=e.target.closest('[data-k]'); if(!card) return;
+  var card=e.target.closest('[data-k]'); if(!card||e.target.closest('a[href]')) return;
   var key=card.getAttribute('data-k'), n=BYKEY.get(key), a=e.target.closest('[data-a]');
   if(n.kind==='add'){ if(typeof openAdd==='function') openAdd(n); return }
   var act=a?a.getAttribute('data-a'):'open';
@@ -3292,6 +3372,34 @@ document.querySelector('[data-ro]').onclick=function(){ $('#viewmenu').hidden=tr
 
 /*{edit*/
 /* ---------- Backup & import screen ---------- */
+/* ---------- reading a tree from any file ----------
+   A .txt backup from this app or Pedigree Builder, or a read-only web page (.html) from either, including packed pages
+   that keep their data deflated in a base64 script. Resolves to {db:state} (this app) or {pb:state} (Pedigree Builder), or null. */
+function isPedTree(o){ return !!(o&&Array.isArray(o.people)&&o.people.length&&o.people.every(function(p){return p&&p.n!=null})) }
+/* The JSON object that starts at t[i], found by matching braces outside strings. */
+function jsonAt(t,i){
+  for(var j=i,lv=0,str=false;j<t.length;j++){
+    var c=t.charCodeAt(j);
+    if(str){ if(c===92) j++; else if(c===34) str=false; continue }
+    if(c===34) str=true; else if(c===123) lv++; else if(c===125&&--lv===0) return JSON.parse(t.slice(i,j+1));
+  }
+  throw new Error('json');
+}
+function treeFromText(t){
+  t=String(t||'');
+  var kind=function(o){ return valid(o)?{db:o}:isPedTree(o)?{pb:o}:null };
+  var m=/\b(DB_EXPORT|PB_EXPORT)\s*=\s*\{/.exec(t);
+  if(m){ var o=null; try{ o=jsonAt(t,m.index+m[0].length-1).state }catch(_){} return Promise.resolve(kind(o)) }
+  var z=/<script[^>]*\bid=["']?z["']?[^>]*>\s*([A-Za-z0-9+\/=\s]{40,})<\/script>/.exec(t);
+  if(z){
+    if(typeof DecompressionStream!=='function') return Promise.resolve(null);
+    try{ var bin=atob(z[1].replace(/\s+/g,'')), u=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i) }catch(_){ return Promise.resolve(null) }
+    return new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate'))).text()
+      .then(function(s){ return /\b(DB_EXPORT|PB_EXPORT)\s*=\s*\{/.test(s)?treeFromText(s):null },function(){ return null });
+  }
+  var j=null; try{ j=parseJsonText(t) }catch(_){}
+  return Promise.resolve(kind(j));
+}
 function openData(){
   var r=P.get(STATE.root);
   openSheet(shell('Backup & import','Your tree',
@@ -3299,8 +3407,8 @@ function openData(){
     '<div class="btnrow"><button type="button" class="btn" data-x="txt">Export as .txt file</button><button type="button" class="btn" data-x="ged">Export as GEDCOM (.ged)</button></div></section>'+
     '<section class="combo"><h3 class="sh3">Send someone\'s ancestry to Pedigree Builder</h3><p class="note2">Makes a Pedigree Builder file of one person and their ancestors in this tree. Import it there on the Backup &amp; reset screen.</p>'+
     '<label for="pbf">Person</label><input type="search" id="pbf" autocomplete="off" placeholder="Find a person"><ul class="combolist" id="pbl" hidden></ul><div id="pbpick"></div></section>'+
-    '<section><h3 class="sh3">Import</h3><p class="note2">A Descendant Builder .txt backup, a <b>Pedigree Builder</b> .txt backup, or a GEDCOM (.ged) file from Ancestry, FamilySearch and other programs. Importing replaces the tree in this browser (you can undo).</p>'+
-    '<label class="f filein">Choose a file<input type="file" id="impf" accept=".txt,.json,.ged,.gedcom,text/plain"></label><p class="okmsg" id="impmsg" hidden></p></section>'+
+    '<section><h3 class="sh3">Import</h3><p class="note2">A Descendant Builder or <b>Pedigree Builder</b> .txt backup or read-only web page (.html), or a GEDCOM (.ged) file from Ancestry, FamilySearch and other programs. Importing replaces the tree in this browser (you can undo).</p>'+
+    '<label class="f filein">Choose a file<input type="file" id="impf" accept=".txt,.json,.ged,.gedcom,.html,.htm,text/plain,text/html,application/json"></label><p class="okmsg" id="impmsg" hidden></p></section>'+
     '<section><h3 class="sh3">Start over</h3><div class="btnrow"><button type="button" class="btn" data-x="sample">Load the Randolph sample</button><button type="button" class="btn danger" data-x="blank">Start a blank tree…</button></div><div id="blankc"></div></section>',
     '<button type="button" class="btn primary" data-close>Done</button>'));
   sheet.querySelector('[data-x="txt"]').onclick=exportTxt;
@@ -3321,17 +3429,17 @@ function openData(){
   $('#impf').onchange=function(){
     var f=this.files[0]; if(!f) return; var rd=new FileReader();
     rd.onload=function(){
-      var t=String(rd.result), msg='';
+      var t=String(rd.result), prev=JSON.stringify(STATE);
+      var fail=function(){ var m=$('#impmsg'); m.hidden=false; m.className='okmsg'; m.textContent='Could not read that file. Choose a Descendant Builder or Pedigree Builder .txt backup or read-only web page (.html), or a GEDCOM file.' };
+      var done=function(msg){ UNDO.push({s:prev,label:'Imported '+f.name,view:view}); REDO=[]; undoBtns(); afterLoad(msg,true); pickRoot() };
       try{
-        var prev=JSON.stringify(STATE);
-        if(/^\s*0\s+HEAD/m.test(t)&&/\bINDI\b/.test(t)){ importGed(t); msg='Imported '+STATE.people.length+' people from GEDCOM' }
-        else { var o=parseJsonText(t);
-          if(valid(o)){ STATE=normalize(o); msg='Imported '+STATE.people.length+' people' }
-          else if(Array.isArray(o.people)&&o.people.every(function(p){return p.n!=null})){ fromPedigree(o); msg='Imported '+STATE.people.length+' people from Pedigree Builder. The chart starts from '+P.get(STATE.root).name+'.' }
-          else throw new Error('not a tree') }
-        UNDO.push({s:prev,label:'Imported '+f.name,view:view}); REDO=[]; undoBtns();
-        afterLoad(msg,true); pickRoot();
-      }catch(err){ var m=$('#impmsg'); m.hidden=false; m.textContent='Could not read that file. Choose a Descendant Builder or Pedigree Builder .txt backup, or a GEDCOM file.' }
+        if(/^\s*0\s+HEAD/m.test(t)&&/\bINDI\b/.test(t)){ importGed(t); done('Imported '+STATE.people.length+' people from GEDCOM'); return }
+      }catch(_){ fail(); return }
+      treeFromText(t).then(function(r){
+        if(!r) return fail();
+        if(r.db){ STATE=normalize(r.db); delete STATE.sample; delete STATE.sampleNote; done('Imported '+STATE.people.length+' people') }
+        else { fromPedigree(r.pb); done('Imported '+STATE.people.length+' people from Pedigree Builder. The chart starts from '+P.get(STATE.root).name+'.') }
+      }).catch(fail);
     };
     rd.readAsText(f);
   };

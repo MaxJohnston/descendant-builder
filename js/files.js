@@ -203,6 +203,34 @@ document.querySelector('[data-ro]').onclick=function(){ $('#viewmenu').hidden=tr
 
 /*{edit*/
 /* ---------- Backup & import screen ---------- */
+/* ---------- reading a tree from any file ----------
+   A .txt backup from this app or Pedigree Builder, or a read-only web page (.html) from either, including packed pages
+   that keep their data deflated in a base64 script. Resolves to {db:state} (this app) or {pb:state} (Pedigree Builder), or null. */
+function isPedTree(o){ return !!(o&&Array.isArray(o.people)&&o.people.length&&o.people.every(function(p){return p&&p.n!=null})) }
+/* The JSON object that starts at t[i], found by matching braces outside strings. */
+function jsonAt(t,i){
+  for(var j=i,lv=0,str=false;j<t.length;j++){
+    var c=t.charCodeAt(j);
+    if(str){ if(c===92) j++; else if(c===34) str=false; continue }
+    if(c===34) str=true; else if(c===123) lv++; else if(c===125&&--lv===0) return JSON.parse(t.slice(i,j+1));
+  }
+  throw new Error('json');
+}
+function treeFromText(t){
+  t=String(t||'');
+  var kind=function(o){ return valid(o)?{db:o}:isPedTree(o)?{pb:o}:null };
+  var m=/\b(DB_EXPORT|PB_EXPORT)\s*=\s*\{/.exec(t);
+  if(m){ var o=null; try{ o=jsonAt(t,m.index+m[0].length-1).state }catch(_){} return Promise.resolve(kind(o)) }
+  var z=/<script[^>]*\bid=["']?z["']?[^>]*>\s*([A-Za-z0-9+\/=\s]{40,})<\/script>/.exec(t);
+  if(z){
+    if(typeof DecompressionStream!=='function') return Promise.resolve(null);
+    try{ var bin=atob(z[1].replace(/\s+/g,'')), u=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i) }catch(_){ return Promise.resolve(null) }
+    return new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate'))).text()
+      .then(function(s){ return /\b(DB_EXPORT|PB_EXPORT)\s*=\s*\{/.test(s)?treeFromText(s):null },function(){ return null });
+  }
+  var j=null; try{ j=parseJsonText(t) }catch(_){}
+  return Promise.resolve(kind(j));
+}
 function openData(){
   var r=P.get(STATE.root);
   openSheet(shell('Backup & import','Your tree',
@@ -210,8 +238,8 @@ function openData(){
     '<div class="btnrow"><button type="button" class="btn" data-x="txt">Export as .txt file</button><button type="button" class="btn" data-x="ged">Export as GEDCOM (.ged)</button></div></section>'+
     '<section class="combo"><h3 class="sh3">Send someone\'s ancestry to Pedigree Builder</h3><p class="note2">Makes a Pedigree Builder file of one person and their ancestors in this tree. Import it there on the Backup &amp; reset screen.</p>'+
     '<label for="pbf">Person</label><input type="search" id="pbf" autocomplete="off" placeholder="Find a person"><ul class="combolist" id="pbl" hidden></ul><div id="pbpick"></div></section>'+
-    '<section><h3 class="sh3">Import</h3><p class="note2">A Descendant Builder .txt backup, a <b>Pedigree Builder</b> .txt backup, or a GEDCOM (.ged) file from Ancestry, FamilySearch and other programs. Importing replaces the tree in this browser (you can undo).</p>'+
-    '<label class="f filein">Choose a file<input type="file" id="impf" accept=".txt,.json,.ged,.gedcom,text/plain"></label><p class="okmsg" id="impmsg" hidden></p></section>'+
+    '<section><h3 class="sh3">Import</h3><p class="note2">A Descendant Builder or <b>Pedigree Builder</b> .txt backup or read-only web page (.html), or a GEDCOM (.ged) file from Ancestry, FamilySearch and other programs. Importing replaces the tree in this browser (you can undo).</p>'+
+    '<label class="f filein">Choose a file<input type="file" id="impf" accept=".txt,.json,.ged,.gedcom,.html,.htm,text/plain,text/html,application/json"></label><p class="okmsg" id="impmsg" hidden></p></section>'+
     '<section><h3 class="sh3">Start over</h3><div class="btnrow"><button type="button" class="btn" data-x="sample">Load the Randolph sample</button><button type="button" class="btn danger" data-x="blank">Start a blank tree…</button></div><div id="blankc"></div></section>',
     '<button type="button" class="btn primary" data-close>Done</button>'));
   sheet.querySelector('[data-x="txt"]').onclick=exportTxt;
@@ -232,17 +260,17 @@ function openData(){
   $('#impf').onchange=function(){
     var f=this.files[0]; if(!f) return; var rd=new FileReader();
     rd.onload=function(){
-      var t=String(rd.result), msg='';
+      var t=String(rd.result), prev=JSON.stringify(STATE);
+      var fail=function(){ var m=$('#impmsg'); m.hidden=false; m.className='okmsg'; m.textContent='Could not read that file. Choose a Descendant Builder or Pedigree Builder .txt backup or read-only web page (.html), or a GEDCOM file.' };
+      var done=function(msg){ UNDO.push({s:prev,label:'Imported '+f.name,view:view}); REDO=[]; undoBtns(); afterLoad(msg,true); pickRoot() };
       try{
-        var prev=JSON.stringify(STATE);
-        if(/^\s*0\s+HEAD/m.test(t)&&/\bINDI\b/.test(t)){ importGed(t); msg='Imported '+STATE.people.length+' people from GEDCOM' }
-        else { var o=parseJsonText(t);
-          if(valid(o)){ STATE=normalize(o); msg='Imported '+STATE.people.length+' people' }
-          else if(Array.isArray(o.people)&&o.people.every(function(p){return p.n!=null})){ fromPedigree(o); msg='Imported '+STATE.people.length+' people from Pedigree Builder. The chart starts from '+P.get(STATE.root).name+'.' }
-          else throw new Error('not a tree') }
-        UNDO.push({s:prev,label:'Imported '+f.name,view:view}); REDO=[]; undoBtns();
-        afterLoad(msg,true); pickRoot();
-      }catch(err){ var m=$('#impmsg'); m.hidden=false; m.textContent='Could not read that file. Choose a Descendant Builder or Pedigree Builder .txt backup, or a GEDCOM file.' }
+        if(/^\s*0\s+HEAD/m.test(t)&&/\bINDI\b/.test(t)){ importGed(t); done('Imported '+STATE.people.length+' people from GEDCOM'); return }
+      }catch(_){ fail(); return }
+      treeFromText(t).then(function(r){
+        if(!r) return fail();
+        if(r.db){ STATE=normalize(r.db); delete STATE.sample; delete STATE.sampleNote; done('Imported '+STATE.people.length+' people') }
+        else { fromPedigree(r.pb); done('Imported '+STATE.people.length+' people from Pedigree Builder. The chart starts from '+P.get(STATE.root).name+'.') }
+      }).catch(fail);
     };
     rd.readAsText(f);
   };

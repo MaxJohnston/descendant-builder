@@ -168,6 +168,7 @@ function cardHTML(n){
   var nm=esc2(dispName(p))+(p.sx&&!/[,\s]/.test(p.sx)?'':'');
   if(n.kind==='p'&&n.id!==view&&childrenOf(n.id).length) btns+='<button type="button" class="ico" data-a="view" aria-label="Show the descendants of '+esc2(p.name)+'" title="Start the chart from '+esc2(p.name)+'">'+ICON_TREE+'</button>';
   if(editing&&!READONLY&&n.kind!=='ref') btns+='<button type="button" class="ico pen" data-a="edit" aria-label="Edit '+esc2(p.name)+'">'+ICON_PEN+'</button>';
+  if(p.wiki) btns+='<a class="ico wiki" href="'+esc2(wikiHref(p.wiki))+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc2(wikiAria(p.wiki,p.name))+'" title="'+esc2(wikiSite(p.wiki))+' (opens in a new tab)"><span class="wglyph" aria-hidden="true">W</span></a>';
   btns+='<button type="button" class="ico" data-a="open" aria-expanded="'+(openKey===n.key)+'" aria-label="Details for '+esc2(p.name)+'">'+ICON_CHEV+'</button>';
   var more=n.more?'<button type="button" class="beyond" data-a="more" title="'+n.more+' more descendants. Show them." aria-label="'+n.more+' more descendants of '+esc2(p.name)+'"><span>+'+n.more+'</span>&#8250;</button>':'';
   if(n.more) cls+=' hasmore';
@@ -206,6 +207,7 @@ function render(keep){
   if(keep){ vp.scrollLeft=sx; vp.scrollTop=sy }
   if(openKey&&BYKEY.has(openKey)) showPop(openKey); else closePop(true);
   updateStatus();
+  renderNotable();
 }
 function renderHeader(){
   var p=P.get(view);
@@ -393,8 +395,8 @@ function setView(id){
   fillDepth(); render(); fitStart(); saveView();
 }
 /* Show only the lines from the start of the tree down to one person: every way they descend from it. */
-function showLineage(id){
-  var root=STATE.root, down=new Set([root]), st=[root];
+function showLineage(id,from){
+  var root=from&&P.has(from)?from:STATE.root, down=new Set([root]), st=[root];
   while(st.length){ childrenOf(st.pop()).forEach(function(k){ if(!down.has(k)){ down.add(k); st.push(k) } }) }
   if(!down.has(id)||id===root) return;
   var set=new Set([id]); st=[id];
@@ -406,7 +408,7 @@ function showLineage(id){
     memo.set(x,m); return m };
   var gm=walk(id), paths=0, gens=[]; gm.forEach(function(n,g){ paths+=n; gens.push(g) }); gens.sort(function(a,b){return a-b});
   var prev=FOCUS?FOCUS.prev:{view:view, depth:depth};
-  FOCUS={id:id, set:set, paths:paths, gens:gens, prev:prev};
+  FOCUS={id:id, set:set, paths:paths, gens:gens, prev:prev, from:root};
   view=root; openKey=null; depth=gens[gens.length-1]+1;
   fillDepth(); render(); fitStart();
   if(SHOWN.has(id)) focusNode(SHOWN.get(id));
@@ -417,10 +419,55 @@ function endLineage(){
   fillDepth(); render(); fitStart();
   if(SHOWN.has(id)) focusNode(SHOWN.get(id),true);
 }
+/* ---------- notable descendants ----------
+   Everyone descended from the start of the chart whose "Notable for" is filled in. Clicking one shows how they descend
+   (every line from the start of the chart down to them); clicking again goes back to the full chart. */
+var NDON=false; try{ NDON=localStorage.getItem('descendant-builder-nd')==='1' }catch(_){}
+function linesTo(from,id){
+  var memo=new Map();
+  var walk=function(x){ if(x===from) return 1; if(memo.has(x)) return memo.get(x); memo.set(x,0);
+    var n=0; parentsOf(x).forEach(function(q){ if(q===from||VIEWDESC.has(q)) n+=walk(q) }); memo.set(x,n); return n };
+  return walk(id);
+}
+function renderNotable(){
+  var panel=$('#ndp'), btn=$('#nd'); if(!panel||!btn) return;
+  btn.setAttribute('aria-pressed',NDON?'true':'false');
+  if(!NDON){ panel.hidden=true; panel.innerHTML=''; return }
+  var from=view, list=[];
+  VIEWDESC.forEach(function(id){ var p=P.get(id); if(p&&p.star) list.push({id:id, g:genFrom(from,id)}) });
+  list.sort(function(a,b){ return a.g-b.g||(P.get(a.id).b||9999)-(P.get(b.id).b||9999) });
+  var fp=P.get(from), h='<h2>Notable descendants of '+esc(dispName(fp))+' · '+list.length+'</h2>';
+  if(fp&&fp.star) h+='<p class="t2" style="margin:0 4px 8px"><span class="sdot">&#9733;</span> '+esc(dispName(fp))+': '+esc(fp.star)+'</p>';
+  if(!list.length) h+='<p class="t2" style="margin:4px">No one descended from '+esc(firstName(fp))+' has <b>Notable for</b> filled in. Add it with the pencil in edit mode.</p>';
+  else{
+    h+='<ul class="czl">';
+    list.forEach(function(x){
+      var p=P.get(x.id), sel=!!(FOCUS&&FOCUS.id===x.id), n=linesTo(from,x.id), y=years(p);
+      h+='<li><button class="czi" type="button" data-nd="'+esc(x.id)+'" aria-pressed="'+sel+'">'+
+        '<span class="n2">'+(sel?'<span class="sdot" aria-hidden="true">&#9733;</span> ':'')+esc(dispName(p))+'</span>'+(y?' <span class="t2">'+esc(y)+'</span>':'')+
+        '<span class="r2">'+esc(p.star)+'</span>'+
+        '<span class="v2">'+esc(relWord(x.g,sexOf(x.id)))+' · '+x.g+(x.g===1?' generation':' generations')+' down'+(n>1?' · '+n+' lines of descent':'')+'</span>'+
+        '<span class="v2">'+(sel?'Showing how they descend · click to show everyone':'Click to show how they descend')+'</span></button>'+
+        (p.wiki?'<a class="ico czw" href="'+esc(wikiHref(p.wiki))+'" target="_blank" rel="noopener noreferrer" aria-label="'+esc(wikiAria(p.wiki,p.name))+'" title="'+esc(wikiSite(p.wiki))+' (opens in a new tab)"><span class="wglyph" aria-hidden="true">W</span></a>':'')+'</li>';
+    });
+    h+='</ul>';
+  }
+  var st=panel.scrollTop; panel.innerHTML=h; panel.hidden=false; panel.scrollTop=st;
+}
+$('#nd').addEventListener('click',function(){
+  NDON=!NDON; try{ localStorage.setItem('descendant-builder-nd',NDON?'1':'0') }catch(_){}
+  renderNotable();
+});
+$('#ndp').addEventListener('click',function(e){
+  var b=e.target.closest('[data-nd]'); if(!b) return;
+  var id=b.getAttribute('data-nd');
+  if(FOCUS&&FOCUS.id===id) endLineage(); else showLineage(id,FOCUS?FOCUS.from:view);
+  var again=$('#ndp').querySelector('[data-nd="'+cssq(id)+'"]'); if(again) try{ again.focus({preventScroll:true}) }catch(_){}
+});
 function readHash(){ var h=decodeURIComponent(location.hash.slice(1)); return P.has(h)?h:null }
 
 world.addEventListener('click',function(e){
-  var card=e.target.closest('[data-k]'); if(!card) return;
+  var card=e.target.closest('[data-k]'); if(!card||e.target.closest('a[href]')) return;
   var key=card.getAttribute('data-k'), n=BYKEY.get(key), a=e.target.closest('[data-a]');
   if(n.kind==='add'){ if(typeof openAdd==='function') openAdd(n); return }
   var act=a?a.getAttribute('data-a'):'open';
