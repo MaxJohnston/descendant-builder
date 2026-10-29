@@ -297,10 +297,8 @@ select{padding:0 8px}
 /*}edit*/
 }
 
-/* read-only copy: no edit mode */
-/*{edit*/
-body.readonly #edit,body.readonly #editbar{display:none!important}
-/*}edit*/
+/* read-only copy: no edit mode, and no saving another read-only copy (it needs the app's own files) */
+body.readonly #edit,body.readonly #editbar,body.readonly [data-ro],body.readonly .mfs+hr{display:none!important}
 
 /* ---------- descendant chart ---------- */
 @media (min-width:641px){ .stage{flex:1} }
