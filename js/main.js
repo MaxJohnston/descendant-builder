@@ -6,7 +6,8 @@
 (function(){
   if(READONLY){ STATE=normalize(DB_EXPORT.state); document.body.classList.add('readonly'); return }
 /*{edit*/
-  try{ var s=localStorage.getItem(LSKEY); if(s){ var o=JSON.parse(s); if(valid(o)) STATE=normalize(o) } }catch(_){}
+  /* a saved copy of the untouched sample is replaced by the current sample */
+  try{ var s=localStorage.getItem(LSKEY); if(s){ var o=JSON.parse(s); if(valid(o)&&!o.sample) STATE=normalize(o) } }catch(_){}
 /*}edit*/
 })();
 rebuild();

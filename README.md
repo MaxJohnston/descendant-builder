@@ -4,7 +4,7 @@ An editable descendant chart that runs entirely in your web browser. Pick a pers
 
 There is nothing to install, no account and no server. Your tree stays in your own browser.
 
-The page opens with a sample: the descendants of **William Randolph of Turkey Island** (about 1651–1711) and his wife **Mary Isham**, from Robert Isham Randolph's *The Randolphs of Virginia* (Chicago, 1936).
+The page opens with a sample: the descendants of **William Randolph of Turkey Island** (about 1651–1711) and his wife **Mary Isham**, from Robert Isham Randolph's *The Randolphs of Virginia* (Chicago, 1936), covering the first five generations (about 1,180 people with their partners) to keep the page light.
 
 ---
 
