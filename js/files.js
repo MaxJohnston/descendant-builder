@@ -241,11 +241,28 @@ function openData(){
           else if(Array.isArray(o.people)&&o.people.every(function(p){return p.n!=null})){ fromPedigree(o); msg='Imported '+STATE.people.length+' people from Pedigree Builder. The chart starts from '+P.get(STATE.root).name+'.' }
           else throw new Error('not a tree') }
         UNDO.push({s:prev,label:'Imported '+f.name,view:view}); REDO=[]; undoBtns();
-        afterLoad(msg);
+        afterLoad(msg,true); pickRoot();
       }catch(err){ var m=$('#impmsg'); m.hidden=false; m.textContent='Could not read that file. Choose a Descendant Builder or Pedigree Builder .txt backup, or a GEDCOM file.' }
     };
     rd.readAsText(f);
   };
 }
-function afterLoad(msg){ rebuild(); view=STATE.root; depth=Math.min(4,maxDepthOf(view)); closeSheet(); setView(view); save(); toast(msg) }
+function afterLoad(msg,keep){ rebuild(); view=STATE.root; depth=Math.min(4,maxDepthOf(view)); if(!keep) closeSheet(); setView(view); save(); toast(msg) }
+/* After an import: choose who the chart starts from. Suggests the people furthest up each line (most generations below them); any person can be found by name. */
+function pickRoot(){
+  var tops=STATE.people.filter(function(p){ return !parentsOf(p.id).length&&childrenOf(p.id).length }).map(function(p){ return {id:p.id, g:maxDepthOf(p.id)-1} })
+    .sort(function(a,b){ return b.g-a.g||descCount(b.id)-descCount(a.id) }).slice(0,12);
+  var row=function(id,g){ var p=P.get(id); return '<li data-id="'+esc(id)+'"'+(id===STATE.root?' class="cur"':'')+'><b>'+esc(dispName(p))+'</b><span>'+esc([years(p), g!=null?g+(g===1?' generation':' generations')+' below':''].filter(Boolean).join(' · '))+'</span></li>' };
+  var m=$('#impmsg'); m.hidden=false; m.className='okmsg rootpick';
+  m.innerHTML='<span><b>Imported.</b> Who should the chart start from? It starts from <b id="rpcur">'+esc(dispName(P.get(STATE.root)))+'</b> now.</span>'+
+    '<span class="combo"><input type="search" id="rpf" autocomplete="off" placeholder="Find any ancestor"><ul class="combolist" id="rpl" hidden></ul></span>'+
+    '<span class="mute">Furthest back:</span><ul class="combolist rplist" id="rptop">'+tops.map(function(t){ return row(t.id,t.g) }).join('')+'</ul>';
+  var choose=function(e){ var li=e.target.closest('[data-id]'); if(!li) return; var id=li.getAttribute('data-id');
+    STATE.root=id; view=id; depth=Math.min(Math.max(depth,4),maxDepthOf(id)); save(); setView(id);
+    $('#rpcur').textContent=dispName(P.get(id)); m.querySelectorAll('li').forEach(function(x){ x.classList.toggle('cur',x.getAttribute('data-id')===id) });
+    $('#rpl').hidden=true; $('#rpf').value=''; toast('The chart now starts from '+dispName(P.get(id))) };
+  $('#rptop').onclick=choose; $('#rpl').onclick=choose;
+  $('#rpf').oninput=function(){ var v=this.value, res=search(v,8), l=$('#rpl'); l.hidden=!v.trim();
+    l.innerHTML=res.length?res.map(function(id){ return row(id,null) }).join(''):'<li class="none">No one found</li>' };
+}
 /*}edit*/

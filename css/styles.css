@@ -325,3 +325,8 @@ body.readonly #edit,body.readonly #editbar{display:none!important}
 .sub .linkbtn{color:var(--fg)}
 .fwrap .kicker{margin:0}
 .filein input{width:100%}
+
+.rootpick{display:grid;gap:8px}
+.rootpick .combo{position:relative;display:block}
+.rootpick .combolist.rplist{position:static;max-height:240px;overflow:auto;display:block}
+.rootpick li.cur{outline:2px solid var(--star);outline-offset:-2px}

@@ -58,7 +58,7 @@ Click **Edit**. Then:
 - **Export as .txt file**: a full backup.
 - **Export as GEDCOM (.ged)**: for Ancestry, FamilySearch, MyHeritage and other programs.
 - **Send someone's ancestry to Pedigree Builder**: pick a person and download a Pedigree Builder file of them and all their ancestors in this tree.
-- **Import**: a Descendant Builder backup, a **Pedigree Builder** backup (the ancestors become a descendant tree starting from the root person's earliest paternal ancestor), or a GEDCOM file.
+- **Import**: a Descendant Builder backup, a **Pedigree Builder** backup (the ancestors become a descendant tree), or a GEDCOM file. After importing, choose who the chart starts from: the list suggests the people furthest back (with how many generations are below them), or find any ancestor by name. Until you choose, it starts from the earliest paternal ancestor.
 - **View → Save as read-only web page** makes a single HTML file of the chart that anyone can open.
 
 ## File format
